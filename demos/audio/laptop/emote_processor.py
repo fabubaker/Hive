@@ -44,6 +44,15 @@ asound.snd_lib_error_set_handler(c_error_handler)
 # Pyaudio init
 Vokaturi.load("./Vokaturi_linux64.so")
 
+p = pyaudio.PyAudio()
+stream = p.open(format=p.get_format_from_width(WIDTH),
+                channels=CHANNELS,
+                rate=RATE,
+                output=True,
+                frames_per_buffer=CHUNK)
+
+stream.start_stream()
+
 try:
     while inputs:
         readable, writable, exceptional = select.select(
@@ -55,18 +64,8 @@ try:
                 print timenow(), 'Connected to', client_addr 
                 
                 connection.setblocking(0)
-	        inputs.append(connection)
-                
-                p = pyaudio.PyAudio()
-                stream = p.open(format=p.get_format_from_width(WIDTH),
-                                channels=CHANNELS,
-                                rate=RATE,
-                                output=True,
-                                frames_per_buffer=CHUNK)
-                
-                stream.start_stream()
+	        inputs.append(connection)                
 
-                audio_handlers[connection] = (p, stream)
                 amps[connection]     = None
             
 	    else:
@@ -75,7 +74,6 @@ try:
                     #print timenow(), str(len(data)), ' bytes received from ', str(s.getpeername())
 
                     message_list[s] = data
-                    audio_handlers[s][1].write(data) # Output audio
 
                     # Get amplitude of stream.
                     amps[s] = get_amplitude(data)
@@ -98,8 +96,9 @@ try:
                 max_conn = conn
 
         if max_amp > 0:
-            # analyze the highest amplitude stream
-            vokaturi_analyze(message_list[max_conn], max_conn.getsockname()[0], timenow())
+            # analyze and playback the highest amplitude stream
+            stream.write(data) # Output audio
+            vokaturi_analyze(message_list[max_conn], max_conn.getpeername()[0], timenow())
     
 except KeyboardInterrupt:
     # Cleanup
@@ -108,3 +107,4 @@ except KeyboardInterrupt:
     stream.close()
     p.terminate()
     server.close()
+
