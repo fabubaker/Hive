@@ -28,7 +28,7 @@ camera = PiCamera()
 camera.resolution = (640, 480)
 camera.framerate = 64
 rawCapture = PiRGBArray(camera, size=(640, 480))
-FPS = 10
+FPS = 0.4 # second per image
 
 # allow the camera to warmup
 time.sleep(0.1)
@@ -48,4 +48,4 @@ for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=
     
     # clear the stream in preparation for the next frame
     rawCapture.truncate(0)
-    time.sleep(float(1/FPS))
+    time.sleep(FPS)
