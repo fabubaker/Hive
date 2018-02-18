@@ -2,7 +2,8 @@
 import time
 import cv2
 import zmq
-import numpy
+import numpy as np
+
 
 # zmq port details
 PORT = "9999"
@@ -12,35 +13,54 @@ topic = "/video"
 socket.connect("tcp://10.42.0.53:%s" % PORT)
 socket.setsockopt(zmq.SUBSCRIBE, topic)
 
+def convertToRGB(img):
+        return cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+def detect_faces(f_cascade, colored_img, scaleFactor = 1.1):
+    img_copy = np.copy(colored_img)
+    #convert the test image to gray image as opencv face detector expects gray images
+    gray = cv2.cvtColor(img_copy, cv2.COLOR_BGR2GRAY)
+    
+    #let's detect multiscale (some images may be closer to camera than others) images
+    faces = f_cascade.detectMultiScale(gray, scaleFactor=scaleFactor, minNeighbors=5);
+
+    print('Faces found: %d' % len(faces))
+    
+    #go over list of faces and draw them as rectangles on original colored img
+    for (x, y, w, h) in faces:
+        cv2.rectangle(img_copy, (x, y), (x+w, y+h), (0, 255, 0), 2)
+        
+    return img_copy
+
 def recv_array(socket, flags=0, copy=True, track=False):
     """recv a numpy array"""
     md = socket.recv_json(flags=flags)
     msg = socket.recv(flags=flags, copy=copy, track=track)
     buf = buffer(msg)
-    A = numpy.frombuffer(buf, dtype=md['dtype'])
+    print len(buf)
+    A = np.frombuffer(buf, dtype=md['dtype'])
     return A.reshape(md['shape'])
 
-orb = cv2.ORB()
-
-while True:
-    topic_recv = socket.recv()
-    seqno      = socket.recv()
-    image      = recv_array(socket)
-
-    print "Message %s received..." % seqno
-
-    # kp = orb.detect(image,None)
-    # kp, des = orb.compute(image, kp)
-    # img2 = cv2.drawKeypoints(image,kp,color=(0,255,0), flags=0)
-    img2 = image
-
-    # show the frame
-    cv2.imshow("Frame", img2)
-    key = cv2.waitKey(1) & 0xFF
+if __name__ == "__main__":
+    orb = cv2.ORB()
+    lbp_face_cascade = cv2.CascadeClassifier('lbpcascade_frontalface.xml')
     
-    # if the `q` key was pressed, break from the loop
-    if key == ord("q"):
-        break
+    while True:
+        topic_recv = socket.recv()
+        seqno      = socket.recv()
+        image      = recv_array(socket)
+
+        print "Message %s received..." % seqno
+
+        faces_detected_img = detect_faces(lbp_face_cascade, image)
+        
+        # show the frame
+        cv2.imshow("Frame", faces_detected_img)
+        key = cv2.waitKey(1) & 0xFF
+
+        # if the `q` key was pressed, break from the loop
+        if key == ord("q"):
+            break
 
 
 
