@@ -10,7 +10,8 @@ PORT = "9999"
 context = zmq.Context()
 socket = context.socket(zmq.SUB)
 topic = "/video"
-socket.connect("tcp://10.42.0.53:%s" % PORT)
+#socket.connect("tcp://10.42.0.53:%s" % PORT) ## nsl-shared ip
+socket.connect("tcp://192.168.1.139:%s" % PORT) ## hive ip
 socket.setsockopt(zmq.SUBSCRIBE, topic)
 
 def convertToRGB(img):
@@ -42,7 +43,6 @@ def recv_array(socket, flags=0, copy=True, track=False):
     return A.reshape(md['shape'])
 
 if __name__ == "__main__":
-    orb = cv2.ORB()
     lbp_face_cascade = cv2.CascadeClassifier('lbpcascade_frontalface.xml')
     
     while True:
