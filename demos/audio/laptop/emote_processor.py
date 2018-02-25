@@ -97,6 +97,7 @@ try:
 
         if max_amp > 0:
             # analyze and playback the highest amplitude stream
+            print "Audio stream from %s" % max_conn.getpeername()[0]
             stream.write(data) # Output audio
             vokaturi_analyze(message_list[max_conn], max_conn.getpeername()[0], timenow())
     
