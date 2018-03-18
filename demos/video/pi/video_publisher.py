@@ -4,7 +4,8 @@ from picamera import PiCamera
 import time
 import cv2
 import zmq
-import numpy
+import numpy as np
+import io
 
 def send_array(socket, A, flags=0, copy=True, track=False):
     """send a numpy array with metadata"""
@@ -27,25 +28,25 @@ topic = "/video"
 camera = PiCamera()
 camera.resolution = (640, 480)
 camera.framerate = 64
-rawCapture = PiRGBArray(camera, size=(640, 480))
-FPS = 0.4 # second per image
+rawCapture = io.BytesIO()
+FPS = 0.03 # second per image
 
 # allow the camera to warmup
 time.sleep(0.1)
 seqno=0
 # capture frames from the camera
-for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
+for frame in camera.capture_continuous(rawCapture, format="jpeg", use_video_port=True, quality=10):
     # grab the raw NumPy array representing the image, then initialize the timestamp
     # and occupied/unoccupied text
 
-    print "Sending image %s ..." % seqno
-    image = frame.array
+    data = frame.getvalue()
+    print "Sending image %s with size %d ..." % (seqno, len(data))
     socket.send(topic, zmq.SNDMORE)
     socket.send(str(seqno), zmq.SNDMORE)
-    send_array(socket, image)
-
+    socket.send(data)
     seqno += 1
     
     # clear the stream in preparation for the next frame
     rawCapture.truncate(0)
+    rawCapture.seek(0)
     time.sleep(FPS)
