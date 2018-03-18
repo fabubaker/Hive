@@ -3,7 +3,7 @@ import time
 import cv2
 import zmq
 import numpy as np
-
+import io
 
 # zmq port details
 PORT = "9999"
@@ -12,7 +12,7 @@ socket1 = context.socket(zmq.SUB)
 socket2 = context.socket(zmq.SUB)
 topic = "/video"
 
-str_ip = ["192.168.1.139", "192.168.1.140"]
+str_ip = ["192.168.1.139", "192.168.1.108"]
 #str_ip = ["10.42.0.53", "10.42.0.38"]
 socket_ip = {socket1: str_ip[0], socket2: str_ip[1]}
 
@@ -61,10 +61,12 @@ if __name__ == "__main__":
         for socket in readable:                
                 topic_recv = socket.recv()
                 seqno      = socket.recv()
-                image      = recv_array(socket)
+                data       = socket.recv()
+                image = cv2.imdecode(np.fromstring(data, dtype=np.uint8), 1)
 
-                print "Message %s received from %s" % (seqno, socket_ip[socket])
-
+                print "Message %s received from %s with size %d <=> %d" % (seqno, socket_ip[socket], len(data), len(image))
+                #cv2.imwrite("test.jpg", image, [int(cv2.IMWRITE_JPEG_QUALITY), 10])
+                
                 faces_detected_img = detect_faces(lbp_face_cascade, image)
                 
                 # show the frame
