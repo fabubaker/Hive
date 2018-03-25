@@ -46,14 +46,13 @@ count = 1
 f = open("results%d.dat" % NUM, "w+")
 f.write("time \t latency\n")
 
-avg = 0
+avg = []
 try:
         while True:
             amps = {}
             slab = {}
             times = {}
             total = {}
-            print ">>>>" + str(count)
             readable, writable, exceptional = zmq.select(sockets, [], [])
             for socket in readable:                
                 topic = socket.recv()
@@ -67,14 +66,14 @@ try:
                 total[socket] = len(topic) + len(data) + len(stamp)
 
             maxkey = max(amps.iteritems(), key=operator.itemgetter(1))[0]
-            f.write("%s \t %f \t %d \t %d\n" % (count, times[maxkey], total[maxkey], len(amps)))
-            avg += times[maxkey]
+            f.write("%s \t %f \n" % (count, times[maxkey]))
+            avg.append(times[maxkey])
 
             print ">>>" + str(count)
             count += 1
 
             
 except KeyboardInterrupt:
-    f.write("%f" % (float(avg)/float(count)))
+    f.write("%f \t %f" % (np.mean(avg), np.var(avg)))
     f.close()
     
