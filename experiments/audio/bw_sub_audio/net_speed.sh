@@ -30,27 +30,24 @@ get_velocity()
     old_value=$2
 
     let vel=$value-$old_value
-#    let velKB=$vel/1024
-#    if [ $velKB != 0 ];
-#    then
-# echo -n "$velKB KB/s";
-#    else
+    let velKB=$vel/1024
+    if [ $velKB != 0 ];
+    then
+ echo -n "$velKB KB/s";
+    else
  echo -n "$vel B/s";
-#    fi
+    fi
 }
+
+> results.dat  # Empty out
 
 # Gets initial values.
 get_bytes
 old_received_bytes=$received_bytes
 old_transmitted_bytes=$transmitted_bytes
 
-# Shows a message and waits for one second.
-#echo "Starting...";
-#sleep 1;
-#echo "";
-
-# Main loop. Loop for n seconds.
-for ((i=1;i<=$2;i++)); 
+# Main loop. It will repeat forever.
+for((i=1;i<=$2;i++));
 do
 
     # Get new transmitted and received byte number values.
@@ -68,8 +65,8 @@ do
     old_received_bytes=$received_bytes
     old_transmitted_bytes=$transmitted_bytes
 
-    # Waits 0.1 second.
-    sleep 0.1;
+    # Waits 1 second.
+    sleep 1;
 
 done
 

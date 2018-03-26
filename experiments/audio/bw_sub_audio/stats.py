@@ -13,7 +13,9 @@ bws = []
 
 for line in f.readlines():
     bw = float(line.split(" ")[0])
-    bws.append(bw/1000)
+
+    if bw != 0:
+            bws.append(bw/1000)
     
 
 avg = percentile(90, bws)

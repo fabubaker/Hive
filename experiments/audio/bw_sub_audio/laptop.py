@@ -29,7 +29,7 @@ socket.setsockopt(zmq.SUBSCRIBE, '')
 
 NUM = int(sys.argv[1]) # number of subscribers
 BASEPORT = 9000
-BASEIP   = "127.0.0.1:"
+BASEIP   = "192.168.1.108:"
 
 CHUNK = 8192
 FORMAT = pyaudio.paInt16
